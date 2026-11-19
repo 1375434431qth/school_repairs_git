@@ -1,0 +1,54 @@
+:root {
+  --el-color-primary: #1ba3e0;
+  --el-color-primary-light-3: #55bce8;
+  --el-color-primary-light-5: #8dd2ef;
+  --el-color-primary-light-7: #bde6f6;
+  --el-color-primary-light-8: #d5eefa;
+  --el-color-primary-light-9: #ebf7fd;
+  --el-color-primary-dark-2: #1489bf;
+  --el-border-radius-base: 4px;
+  --el-font-size-base: 14px;
+}
+
+.el-button--primary {
+  --el-button-bg-color: var(--brand);
+  --el-button-border-color: var(--brand);
+  --el-button-hover-bg-color: var(--brand-dark);
+  --el-button-hover-border-color: var(--brand-dark);
+}
+
+.el-table th.el-table__cell {
+  background: var(--brand-light);
+  color: var(--text-regular);
+  font-weight: 600;
+}
+
+.el-table .cell {
+  line-height: 20px;
+}
+
+.el-dialog__header {
+  border-bottom: 1px solid var(--border);
+  margin-right: 0;
+  padding-bottom: 14px;
+}
+
+.el-dialog__title {
+  font-weight: 700;
+}
+
+.el-drawer__header {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.el-descriptions__label {
+  color: var(--text-sub) !important;
+}
+
+.el-form-item__label {
+  color: var(--text-regular);
+}

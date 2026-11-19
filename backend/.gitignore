@@ -1,0 +1,8 @@
+target/
+data/uploads/
+logs/
+*.log
+.idea/
+*.iml
+.DS_Store
+application-local.yml

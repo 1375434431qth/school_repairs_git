@@ -1,0 +1,119 @@
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+    max-http-form-post-size: 10MB
+    max-swallow-size: 20MB
+
+spring:
+  application:
+    name: school-repair
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+  web:
+    resources:
+      add-mappings: true
+  rabbitmq:
+    listener:
+      simple:
+        acknowledge-mode: manual
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.cqust.repair.**.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+    default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# 业务参数：统一前缀 repair，配合 AppProperties 强类型绑定
+repair:
+  jwt:
+    secret: ${JWT_SECRET:cqust-school-repair-2026-secret-key-at-least-32-chars}
+    expire-seconds: 7200
+    refresh-expire-seconds: 604800
+    header: Authorization
+    prefix: "Bearer "
+  upload:
+    max-count-per-type: 6
+    max-count-per-order: 12
+    allow-ext: jpg,jpeg,png,webp
+    max-size: 5242880
+  order:
+    no-prefix: WR
+    auto-confirm-days: 7
+    auto-close-days: 7
+    priority-hours:
+      1: 4
+      2: 8
+      3: 24
+      4: 72
+  notice:
+    websocket:
+      enabled: true
+      heartbeat-seconds: 30
+      max-sessions-per-user: 3
+  mq:
+    enabled: false
+  async:
+    core-pool-size: 4
+    max-pool-size: 8
+    queue-capacity: 200
+    keep-alive-seconds: 60
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  charset:
+    console: UTF-8
+    file: UTF-8
+  level:
+    root: info
+    com.cqust.repair: debug
+    com.cqust.repair.module.*.mapper: info
+  file:
+    name: logs/school-repair.log
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+      max-history: 30
+      total-size-cap: 1GB

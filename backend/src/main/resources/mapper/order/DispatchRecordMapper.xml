@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cqust.repair.module.order.mapper.DispatchRecordMapper">
+
+    <!-- 某维修工累计拒单达到阈值的工单（BR-02：拒 2 次后不再进入其抢单池） -->
+    <select id="listRejectedOrderIds" resultType="long">
+        SELECT order_id
+        FROM t_dispatch_record
+        WHERE deleted = 0
+          AND dispatch_type = 'REJECT'
+          AND assignee_id = #{repairerId}
+        GROUP BY order_id
+        HAVING COUNT(1) &gt;= #{minCount}
+    </select>
+
+</mapper>

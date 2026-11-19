@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cqust.repair.module.stat.mapper.StatMapper">
+
+    <!-- 数据范围：单楼栋优先，否则管理员授权楼栋集合 -->
+    <sql id="scope">
+        <if test="q.buildingId != null">
+            AND o.building_id = #{q.buildingId}
+        </if>
+        <if test="q.buildingId == null and q.buildingIds != null and q.buildingIds.size() > 0">
+            AND o.building_id IN
+            <foreach collection="q.buildingIds" item="bid" open="(" separator="," close=")">#{bid}</foreach>
+        </if>
+    </sql>
+
+    <!-- 完工时间左闭右开 -->
+    <sql id="finishRange">
+        <if test="q.beginTime != null">
+            AND o.finish_time &gt;= #{q.beginTime}
+        </if>
+        <if test="q.endTime != null">
+            AND o.finish_time &lt; #{q.endTime}
+        </if>
+    </sql>
+
+    <!-- 趋势时间粒度 -->
+    <sql id="dateExpr">
+        <choose>
+            <when test="q.groupBy == 'week'">DATE_FORMAT(o.finish_time, '%x-W%v')</when>
+            <when test="q.groupBy == 'month'">DATE_FORMAT(o.finish_time, '%Y-%m')</when>
+            <otherwise>DATE_FORMAT(o.finish_time, '%Y-%m-%d')</otherwise>
+        </choose>
+    </sql>
+
+    <select id="typeDistribution" resultType="map">
+        SELECT o.fault_category AS category, COUNT(1) AS cnt
+        FROM t_work_order o
+        WHERE o.deleted = 0
+          AND o.id = o.root_order_id
+          AND o.create_time &gt;= #{q.beginTime}
+          AND o.create_time &lt; #{q.endTime}
+        <include refid="scope"/>
+        GROUP BY o.fault_category
+        ORDER BY cnt DESC
+    </select>
+
+    <select id="avgDuration" resultType="map">
+        SELECT <include refid="dateExpr"/> AS d,
+               ROUND(AVG(TIMESTAMPDIFF(MINUTE, o.create_time, o.finish_time))) AS avgMinutes,
+               COUNT(1) AS orderCount
+        FROM t_work_order o
+        WHERE o.deleted = 0
+          AND o.id = o.root_order_id
+          AND o.status IN ('CONFIRMED', 'CLOSED')
+          AND o.finish_time IS NOT NULL
+        <include refid="finishRange"/>
+        <include refid="scope"/>
+        GROUP BY <include refid="dateExpr"/>
+        ORDER BY d
+    </select>
+
+    <select id="finishedCount" resultType="int">
+        SELECT COUNT(1)
+        FROM t_work_order o
+        WHERE o.deleted = 0
+          AND o.id = o.root_order_id
+          AND o.status IN ('CONFIRMED', 'CLOSED')
+        <include refid="finishRange"/>
+        <include refid="scope"/>
+    </select>
+
+    <select id="reworkCount" resultType="int">
+        SELECT COUNT(DISTINCT a.order_id)
+        FROM t_order_acceptance a
+        JOIN t_work_order o ON o.id = a.order_id AND o.deleted = 0
+        WHERE a.deleted = 0
+          AND a.result = 'REJECT'
+          AND a.create_time &gt;= #{q.beginTime}
+          AND a.create_time &lt; #{q.endTime}
+        <include refid="scope"/>
+    </select>
+
+    <select id="reworkTopRooms" resultType="map">
+        SELECT b.name AS buildingName, o.room_no AS roomNo, COUNT(1) AS reworkCount
+        FROM t_order_acceptance a
+        JOIN t_work_order o ON o.id = a.order_id AND o.deleted = 0
+        JOIN t_building b ON b.id = o.building_id
+        WHERE a.deleted = 0
+          AND a.result = 'REJECT'
+          AND a.create_time &gt;= #{q.beginTime}
+          AND a.create_time &lt; #{q.endTime}
+        <include refid="scope"/>
+        GROUP BY o.building_id, b.name, o.room_no
+        ORDER BY reworkCount DESC
+        LIMIT 10
+    </select>
+
+    <select id="repairerRank" resultType="map">
+        SELECT u.id AS repairerId,
+               u.real_name AS repairerName,
+               COUNT(o.id) AS finishCount,
+               ROUND(AVG(CASE WHEN o.finish_time IS NOT NULL
+                              THEN TIMESTAMPDIFF(MINUTE, COALESCE(o.assign_time, o.create_time), o.finish_time) END)) AS avgMinutes,
+               ROUND(AVG(e.score), 2) AS avgScore
+        FROM t_user u
+        LEFT JOIN t_work_order o
+               ON o.assignee_id = u.id
+              AND o.deleted = 0
+              AND o.id = o.root_order_id
+              AND o.status IN ('CONFIRMED', 'CLOSED')
+              AND o.finish_time IS NOT NULL
+        <include refid="finishRange"/>
+        <include refid="scope"/>
+        LEFT JOIN t_evaluation e ON e.order_id = o.id AND e.deleted = 0
+        WHERE u.deleted = 0
+          AND u.role = 'REPAIRER'
+          AND u.status = 1
+        GROUP BY u.id, u.real_name
+        ORDER BY finishCount DESC, avgScore DESC, u.id ASC
+    </select>
+
+    <select id="overview" resultType="map">
+        SELECT COUNT(1) AS totalOrders,
+               SUM(CASE WHEN o.status IN ('CREATED', 'ASSIGNED', 'ACCEPTED', 'ARRIVED')
+                        THEN 1 ELSE 0 END) AS pendingCount,
+               SUM(CASE WHEN o.timeout_flag = 1
+                         AND o.status NOT IN ('CONFIRMED', 'CLOSED', 'CANCELLED')
+                        THEN 1 ELSE 0 END) AS timeoutCount,
+               SUM(CASE WHEN o.create_time &gt;= CURDATE() THEN 1 ELSE 0 END) AS todayNewCount,
+               ROUND(AVG(CASE WHEN o.status IN ('CONFIRMED', 'CLOSED') AND o.finish_time IS NOT NULL
+                              THEN TIMESTAMPDIFF(MINUTE, o.create_time, o.finish_time) END)) AS avgDurationMinutes,
+               SUM(CASE WHEN o.status IN ('CONFIRMED', 'CLOSED') AND o.is_rework = 1
+                        THEN 1 ELSE 0 END) AS reworkCount,
+               SUM(CASE WHEN o.status IN ('CONFIRMED', 'CLOSED') THEN 1 ELSE 0 END) AS finishedCount
+        FROM t_work_order o
+        WHERE o.deleted = 0
+          AND o.id = o.root_order_id
+        <include refid="scope"/>
+    </select>
+
+</mapper>

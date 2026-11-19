@@ -1,0 +1,20 @@
+# 依赖与构建产物
+node_modules/
+target/
+dist/
+dist-ssr/
+logs/
+*.log
+
+# 本地配置
+application-local.yml
+*.local
+
+# IDE / 系统
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# 截图与临时输出
+.screenshots/

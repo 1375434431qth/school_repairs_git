@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cqust.repair.module.order.mapper.DispatchMapper">
+
+    <!-- 抢单：只有「待派单且无归属人」可抢，扫全表条件命中即成功 -->
+    <update id="grabUpdate">
+        UPDATE t_work_order
+        SET status = 'ACCEPTED',
+            assignee_id = #{repairerId},
+            dispatch_type = 'GRAB',
+            assign_time = NOW(),
+            accept_time = NOW(),
+            version = version + 1,
+            update_time = NOW()
+        WHERE id = #{orderId}
+          AND deleted = 0
+          AND assignee_id IS NULL
+          AND status = 'CREATED'
+    </update>
+
+    <!-- 拒单 / 释放：清空派单人信息，状态由状态机流转 -->
+    <update id="clearAssignee">
+        UPDATE t_work_order
+        SET assignee_id = NULL,
+            assign_time = NULL,
+            dispatch_type = NULL,
+            version = version + 1,
+            update_time = NOW()
+        WHERE id = #{orderId}
+          AND deleted = 0
+    </update>
+
+    <!-- 调优先级：已到场（arrive_time 非空）或终态不重算（BR-09） -->
+    <update id="updatePriority">
+        UPDATE t_work_order
+        SET priority = #{priority},
+            expect_hours = #{expectHours},
+            deadline_time = #{deadlineTime},
+            version = version + 1,
+            update_time = NOW()
+        WHERE id = #{orderId}
+          AND deleted = 0
+          AND arrive_time IS NULL
+          AND status NOT IN ('CLOSED', 'CANCELLED')
+    </update>
+
+    <!-- 手动标记超时：只打标记，不改变工单状态 -->
+    <update id="markTimeout">
+        UPDATE t_work_order
+        SET timeout_flag = 1,
+            timeout_type = #{timeoutType},
+            version = version + 1,
+            update_time = NOW()
+        WHERE id = #{orderId}
+          AND deleted = 0
+    </update>
+
+    <!-- 维修工负载：在手单数（ASSIGNED/ACCEPTED/ARRIVED）+ 今日完工数 -->
+    <select id="repairerLoad" resultType="map">
+        SELECT o.assignee_id AS assigneeId,
+               SUM(CASE WHEN o.status IN ('ASSIGNED', 'ACCEPTED', 'ARRIVED') THEN 1 ELSE 0 END) AS handCount,
+               SUM(CASE WHEN o.status IN ('FINISHED', 'CONFIRMED', 'CLOSED')
+                         AND o.finish_time &gt;= #{dayBegin} THEN 1 ELSE 0 END) AS todayFinishCount
+        FROM t_work_order o
+        WHERE o.deleted = 0
+          AND o.assignee_id IN
+        <foreach collection="assigneeIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        GROUP BY o.assignee_id
+    </select>
+
+</mapper>

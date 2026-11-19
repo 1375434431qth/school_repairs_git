@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cqust.repair.module.stat.mapper.RepairerStatMapper">
+
+    <select id="personal" resultType="map">
+        SELECT
+            (SELECT COUNT(1)
+               FROM t_work_order a
+              WHERE a.deleted = 0
+                AND a.assignee_id = #{repairerId}
+                AND a.assign_time &gt;= #{beginTime}
+                AND a.assign_time &lt; #{endTime}) AS acceptCount,
+            COUNT(1) AS finishCount,
+            ROUND(AVG(TIMESTAMPDIFF(MINUTE, COALESCE(o.assign_time, o.create_time), o.finish_time))) AS avgMinutes,
+            ROUND(AVG(e.score), 2) AS avgScore
+        FROM t_work_order o
+        LEFT JOIN t_evaluation e ON e.order_id = o.id AND e.deleted = 0
+        WHERE o.deleted = 0
+          AND o.assignee_id = #{repairerId}
+          AND o.status IN ('CONFIRMED', 'CLOSED')
+          AND o.finish_time IS NOT NULL
+          AND o.finish_time &gt;= #{beginTime}
+          AND o.finish_time &lt; #{endTime}
+    </select>
+
+</mapper>
