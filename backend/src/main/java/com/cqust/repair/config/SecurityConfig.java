@@ -3,6 +3,7 @@ package com.cqust.repair.config;
 import com.cqust.repair.common.result.R;
 import com.cqust.repair.common.result.ResultCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // SSE 等异步请求完成时会再次派发，原始请求已鉴权，这里放行 ASYNC/ERROR 派发
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
                         // 跨域预检必须放行，否则前端 401
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // 图片预览免登录（img 标签无法带 Header）
@@ -53,7 +56,6 @@ public class SecurityConfig {
                                 "/api/v1/auth/login",
                                 // refresh 可能发生在 access 过期后，必须免登录，由 refreshToken 自身校验
                                 "/api/v1/auth/refresh",
-                                "/doc.html",
                                 "/webjars/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",

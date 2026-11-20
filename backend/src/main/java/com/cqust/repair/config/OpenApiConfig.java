@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * knife4j / OpenAPI 文档配置。
+ * OpenAPI 文档配置。
  *
  * @author school-repair
  */

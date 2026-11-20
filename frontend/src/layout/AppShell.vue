@@ -84,6 +84,8 @@
         <EmptyState v-if="!noticeStore.list.length" description="暂无通知" />
       </div>
     </el-drawer>
+
+    <AiAssistant v-if="userStore.isLogin" />
   </div>
 </template>
 
@@ -92,6 +94,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '@/components/base/AppIcon.vue'
 import EmptyState from '@/components/base/EmptyState.vue'
+import AiAssistant from '@/components/business/AiAssistant.vue'
 import { useUserStore } from '@/stores/user'
 import { useNoticeStore } from '@/stores/notice'
 import { MENUS, ROLE_LABEL } from './menus'

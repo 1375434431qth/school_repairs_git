@@ -27,10 +27,43 @@ spring:
   web:
     resources:
       add-mappings: true
+  data:
+    redis:
+      # 仅使用 RedisTemplate，不启用 Spring Data Redis 仓储扫描
+      repositories:
+        enabled: false
   rabbitmq:
     listener:
       simple:
         acknowledge-mode: manual
+  mvc:
+    async:
+      # AI 流式/长耗时接口超时，必须大于 repair.ai.timeout-seconds
+      request-timeout: 120s
+  http:
+    client:
+      connect-timeout: 10s
+      read-timeout: 90s
+  ai:
+    model:
+      # deepseek 启用；none 关闭（关闭时需同时设置 repair.ai.enabled=false）
+      chat: ${AI_CHAT_MODEL:deepseek}
+    deepseek:
+      # 只允许启动命令/环境变量注入，禁止写入配置文件
+      api-key: ${DEEPSEEK_API_KEY:}
+      base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+      chat:
+        options:
+          model: ${DEEPSEEK_MODEL:deepseek-chat}
+          temperature: 0.3
+          max-tokens: 1024
+    retry:
+      max-attempts: 3
+      backoff:
+        initial-interval: 1s
+        multiplier: 2
+        max-interval: 10s
+      on-client-errors: false
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
@@ -81,11 +114,41 @@ repair:
     max-pool-size: 8
     queue-capacity: 200
     keep-alive-seconds: 60
-
-knife4j:
-  enable: true
-  setting:
-    language: zh_cn
+  ai:
+    enabled: ${AI_ENABLED:true}
+    fail-fast-on-missing-key: true
+    model: ${DEEPSEEK_MODEL:deepseek-chat}
+    max-input-chars: 500
+    max-history-turns: 10
+    history-ttl-minutes: 30
+    knowledge:
+      top-k: 4
+      max-chars: 4000
+      min-score: 1.0
+    rate-limit:
+      per-minute: 10
+      per-day: 200
+    timeout-seconds: 90
+    max-concurrent: 20
+    route-whitelist:
+      COMMON:
+        - /
+        - /service-notices
+      STUDENT:
+        - /student/orders
+        - /student/orders/create
+      REPAIRER:
+        - /repairer/pool
+        - /repairer/orders
+      MANAGER:
+        - /admin/dispatch
+        - /admin/board
+        - /admin/timeout
+        - /admin/stat
+        - /admin/repairer-load
+        - /admin/users
+        - /admin/base-data
+        - /admin/carousel
 
 springdoc:
   api-docs:

@@ -54,4 +54,10 @@ public final class RedisKeys {
     public static final String NOTIFY_UNREAD = "sr:notify:unread:";
     /** MQ 通知消息消费幂等 */
     public static final String MQ_NOTICE_IDEM = "sr:mq:notice:";
+    /** AI 会话历史：sr:ai:chat:{userId}:{conversationId} */
+    public static final String AI_CHAT_HISTORY = "sr:ai:chat:";
+    /** AI 每分钟限流：sr:ai:limit:user:minute:{userId}:{yyyyMMddHHmm} */
+    public static final String AI_LIMIT_USER_MINUTE = "sr:ai:limit:user:minute:";
+    /** AI 每日限流：sr:ai:limit:user:day:{userId}:{yyyyMMdd} */
+    public static final String AI_LIMIT_USER_DAY = "sr:ai:limit:user:day:";
 }

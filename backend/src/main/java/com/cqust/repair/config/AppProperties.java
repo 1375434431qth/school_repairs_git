@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,6 +24,7 @@ public class AppProperties {
     private Notice notice = new Notice();
     private Mq mq = new Mq();
     private Async async = new Async();
+    private Ai ai = new Ai();
 
     @Data
     public static class Jwt {
@@ -73,5 +75,35 @@ public class AppProperties {
         private int maxPoolSize = 8;
         private int queueCapacity = 200;
         private int keepAliveSeconds = 60;
+    }
+
+    @Data
+    public static class Ai {
+        private boolean enabled = true;
+        private boolean failFastOnMissingKey = true;
+        private String model = "deepseek-chat";
+        private int maxInputChars = 500;
+        private int maxHistoryTurns = 10;
+        private int historyTtlMinutes = 30;
+        private int timeoutSeconds = 90;
+        /** 同时进行的 AI 对话上限，防止上游并发与线程资源耗尽 */
+        private int maxConcurrent = 20;
+        private Knowledge knowledge = new Knowledge();
+        private RateLimit rateLimit = new RateLimit();
+        /** 角色 → 允许跳转的静态路由 */
+        private Map<String, List<String>> routeWhitelist = new LinkedHashMap<>();
+
+        @Data
+        public static class Knowledge {
+            private int topK = 4;
+            private int maxChars = 4000;
+            private double minScore = 1.0;
+        }
+
+        @Data
+        public static class RateLimit {
+            private int perMinute = 10;
+            private int perDay = 200;
+        }
     }
 }

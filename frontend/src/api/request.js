@@ -13,7 +13,7 @@ service.interceptors.request.use((config) => {
 })
 
 /** 清登录态并跳登录页（保留 redirect） */
-function redirectToLogin() {
+export function redirectToLogin() {
   sessionStorage.removeItem('token')
   sessionStorage.removeItem('refreshToken')
   sessionStorage.removeItem('userInfo')

@@ -14,20 +14,32 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.2.0</version>
+    <version>3.5.16</version>
     <relativePath/>
   </parent>
 
   <properties>
     <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <mybatis-plus.version>3.5.5</mybatis-plus.version>
+    <mybatis-plus.version>3.5.17</mybatis-plus.version>
     <jjwt.version>0.12.3</jjwt.version>
-    <knife4j.version>4.5.0</knife4j.version>
-    <springdoc.version>2.3.0</springdoc.version>
+    <springdoc.version>2.8.9</springdoc.version>
+    <spring-ai.version>1.1.8</spring-ai.version>
     <mapstruct.version>1.5.5.Final</mapstruct.version>
     <lombok.version>1.18.30</lombok.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.ai</groupId>
+        <artifactId>spring-ai-bom</artifactId>
+        <version>${spring-ai.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <!-- Web / 校验 / AOP -->
@@ -79,6 +91,12 @@
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
 
+    <!-- Spring AI：DeepSeek 对话模型 -->
+    <dependency>
+      <groupId>org.springframework.ai</groupId>
+      <artifactId>spring-ai-starter-model-deepseek</artifactId>
+    </dependency>
+
     <!-- 中间件：Redis（缓存/锁）、MongoDB（轨迹/日志/GridFS）、RabbitMQ（可选，默认关） -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -104,18 +122,19 @@
       <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
       <version>${mybatis-plus.version}</version>
     </dependency>
+    <!-- 3.5.9+ 分页插件拆分后必须显式引入 -->
+    <dependency>
+      <groupId>com.baomidou</groupId>
+      <artifactId>mybatis-plus-jsqlparser</artifactId>
+      <version>${mybatis-plus.version}</version>
+    </dependency>
     <dependency>
       <groupId>com.mysql</groupId>
       <artifactId>mysql-connector-j</artifactId>
       <scope>runtime</scope>
     </dependency>
 
-    <!-- 接口文档：knife4j(jakarta) + 锁定 springdoc 2.3.0 -->
-    <dependency>
-      <groupId>com.github.xiaoymin</groupId>
-      <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
-      <version>${knife4j.version}</version>
-    </dependency>
+    <!-- 接口文档：springdoc（移除 knife4j，避免 Boot 3.5 兼容问题） -->
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>

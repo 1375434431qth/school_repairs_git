@@ -28,9 +28,6 @@ spring:
       uri: ${MONGO_URI:mongodb://localhost:27017/school_repair_log}
       auto-index-creation: true
 
-knife4j:
-  enable: true
-
 logging:
   level:
     com.cqust.repair: debug

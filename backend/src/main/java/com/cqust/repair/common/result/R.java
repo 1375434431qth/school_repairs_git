@@ -17,7 +17,7 @@ public class R<T> implements Serializable {
 
     /** 业务码 */
     private Integer code;
-    /** 提示信息（字段名固定为 message，与 Boot/knife4j 默认一致） */
+    /** 提示信息（字段名固定为 message，与 Boot 默认一致） */
     private String message;
     /** 响应数据 */
     private T data;

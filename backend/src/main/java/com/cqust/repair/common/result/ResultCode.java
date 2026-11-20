@@ -39,8 +39,11 @@ public enum ResultCode {
     /** 幂等成功：HTTP 返回 200 */
     ALREADY_MARKED_TIMEOUT(40905, "该环节已标记超时（幂等返回）", 200),
     TOO_MANY_REQUESTS(429, "操作过于频繁", 429),
+    AI_RATE_LIMITED(42901, "智能助手请求过于频繁，请稍后再试", 429),
     SYSTEM_ERROR(500, "系统异常，请稍后重试", 500),
-    FILE_SERVICE_UNAVAILABLE(503, "图片服务暂不可用", 503);
+    FILE_SERVICE_UNAVAILABLE(503, "图片服务暂不可用", 503),
+    AI_DISABLED(50301, "智能助手未启用", 503),
+    AI_SERVICE_UNAVAILABLE(50302, "智能助手暂不可用，请稍后重试", 503);
 
     /** 业务码 */
     private final Integer code;

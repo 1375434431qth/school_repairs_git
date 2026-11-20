@@ -17,8 +17,6 @@ spring:
       uri: ${MONGO_URI}
       auto-index-creation: true
 
-knife4j:
-  enable: false
 springdoc:
   api-docs:
     enabled: false
